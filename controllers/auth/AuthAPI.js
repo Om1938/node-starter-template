@@ -26,7 +26,7 @@ router.post("/login", SanitizeBody, Loginschema, async (req, res, next) => {
   login(req.body.username, req.body.password, req.ip)
     .then(({ refreshToken, ...user }) => {
       setHttpOnlyCookie(res, refreshToken);
-      res.status(200).json({ message: "User Created successfully", ...user });
+      res.status(200).json({ message: "Logged In Successfully", ...user });
     })
     .catch(next);
 });

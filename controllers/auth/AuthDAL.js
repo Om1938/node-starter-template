@@ -34,8 +34,6 @@ module.exports.register = async (username, password, ipAdress) => {
 
 module.exports.login = async (username, password, ipAdress) => {
   let user = await getUserByUserName(username);
-  console.log(!user);
-  console.log(await bcrypt.compare(password, user.password));
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw throwError("Invalid Credentials", 401);
   }
@@ -55,7 +53,6 @@ module.exports.refreshJWTToken = async (token, ipAddress) => {
     .collection("user")
     .findOne({ username: refreshToken.userName });
 
-  console.log(refreshToken, user, { username: refreshToken.userName });
   // replace old refresh token with a new one and save
   const newRefreshToken = await generateRefreshToken(user.username, ipAddress);
   refreshToken.revoked = new Date();
@@ -112,7 +109,7 @@ async function generateRefreshToken(userName, ipAdress) {
 async function getRefreshToken(token) {
   let dbo = await db;
   const refreshToken = await dbo.collection("refreshToken").findOne({ token });
-
+  console.log(refreshToken, token);
   if (!refreshToken || !isActive(refreshToken))
     throw throwError("Invalid token", 403);
   return refreshToken;
@@ -136,6 +133,6 @@ function GetUserProfile(user) {
 
 function throwError(message, status) {
   let error = new Error(message);
-  error.status = status;
+  error.status = status | 400;
   return error;
 }
