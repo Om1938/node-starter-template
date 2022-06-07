@@ -1,4 +1,4 @@
-let db = require("../../conffig/db");
+let db = require("../../config/db");
 const Roles = require("../../_helper/UserRoles");
 
 const bcrypt = require("bcryptjs");
@@ -37,7 +37,10 @@ module.exports.login = async (username, password, ipAdress) => {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw throwError("Invalid Credentials", 401);
   }
-  const jwtToken = await getJWTtoken(username);
+  const jwtToken = await getJWTtoken({
+    username: user.username,
+    roles: user.roles,
+  });
   const refreshToken = await generateRefreshToken(username);
   return {
     ...GetUserProfile(user),
@@ -62,7 +65,7 @@ module.exports.refreshJWTToken = async (token, ipAddress) => {
     .collection("refreshToken")
     .findOneAndReplace({ token: refreshToken.token }, refreshToken);
   // generate new jwt
-  const jwtToken = await getJWTtoken(user.username);
+  const jwtToken = await getJWTtoken(user);
   // return basic details and tokens
   return {
     ...GetUserProfile(user),
@@ -71,9 +74,18 @@ module.exports.refreshJWTToken = async (token, ipAddress) => {
   };
 };
 
+module.exports.GetUserProfileByUserName = async (username) => {
+  let user = await getUserByUserName(username);
+  const jwtToken = await getJWTtoken({
+    username: user.username,
+    roles: user.roles,
+  });
+  return { ...GetUserProfile(user), jwtToken };
+};
 async function getUserByUserName(username) {
   let dbo = await db;
   let Users = dbo.collection("user");
+
   return Users.findOne({ username });
 }
 
